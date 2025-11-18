@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Numina</string>
+
+    <!-- Auth Screens -->
+    <string name="welcome_to_numina">Welcome to Numina</string>
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="name">Name</string>
+    <string name="dont_have_account">Don\'t have an account?</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="sign_in">Sign In</string>
+
+    <!-- Onboarding -->
+    <string name="lets_get_started">Let\'s Get Started</string>
+    <string name="tell_us_about_yourself">Tell us about yourself</string>
+    <string name="bio">Bio</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="fitness_interests">Fitness Interests</string>
+    <string name="select_your_interests">Select your interests</string>
+    <string name="fitness_level">Fitness Level</string>
+    <string name="beginner">Beginner</string>
+    <string name="advanced">Advanced</string>
+    <string name="location">Location</string>
+    <string name="use_current_location">Use Current Location</string>
+    <string name="enter_location_manually">Enter Location Manually</string>
+    <string name="availability">Availability</string>
+    <string name="select_preferred_times">Select your preferred workout times</string>
+    <string name="next">Next</string>
+    <string name="back">Back</string>
+    <string name="finish">Finish</string>
+    <string name="skip">Skip</string>
+
+    <!-- Classes -->
+    <string name="discover_classes">Discover Classes</string>
+    <string name="filters">Filters</string>
+    <string name="class_type">Class Type</string>
+    <string name="date_range">Date Range</string>
+    <string name="price_range">Price Range</string>
+    <string name="intensity">Intensity</string>
+    <string name="apply_filters">Apply Filters</string>
+    <string name="clear_filters">Clear Filters</string>
+    <string name="find_workout_partner">Find Workout Partner</string>
+    <string name="book_on">Book on %s</string>
+    <string name="class_details">Class Details</string>
+    <string name="trainer">Trainer</string>
+    <string name="duration">Duration</string>
+    <string name="minutes">%d minutes</string>
+    <string name="location_address">Location</string>
+    <string name="spots_available">%d spots available</string>
+
+    <!-- Common -->
+    <string name="loading">Loading…</string>
+    <string name="error_occurred">An error occurred</string>
+    <string name="retry">Retry</string>
+    <string name="no_results">No results found</string>
+    <string name="pull_to_refresh">Pull to refresh</string>
+
+    <!-- Days -->
+    <string name="monday">Monday</string>
+    <string name="tuesday">Tuesday</string>
+    <string name="wednesday">Wednesday</string>
+    <string name="thursday">Thursday</string>
+    <string name="friday">Friday</string>
+    <string name="saturday">Saturday</string>
+    <string name="sunday">Sunday</string>
+
+    <!-- Time Slots -->
+    <string name="morning">Morning</string>
+    <string name="afternoon">Afternoon</string>
+    <string name="evening">Evening</string>
+
+    <!-- Fitness Types -->
+    <string name="yoga">Yoga</string>
+    <string name="hiit">HIIT</string>
+    <string name="spin">Spin</string>
+    <string name="pilates">Pilates</string>
+    <string name="boxing">Boxing</string>
+    <string name="running">Running</string>
+    <string name="strength">Strength Training</string>
+    <string name="dance">Dance</string>
+
+    <!-- Backup/Data Extraction -->
+    <string name="backup_rules">@xml/backup_rules</string>
+    <string name="data_extraction_rules">@xml/data_extraction_rules</string>
+</resources>
