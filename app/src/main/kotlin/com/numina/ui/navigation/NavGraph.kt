@@ -3,7 +3,6 @@ package com.numina.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -18,16 +17,9 @@ import com.numina.ui.classes.ClassDetailsScreen
 import com.numina.ui.classes.ClassDetailsViewModel
 import com.numina.ui.classes.ClassesScreen
 import com.numina.ui.classes.ClassesViewModel
+import com.numina.ui.groups.*
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
-import com.numina.ui.messages.MessagesScreen
-import com.numina.ui.messages.MessagesViewModel
-import com.numina.ui.messages.ChatScreen
-import com.numina.ui.messages.ChatViewModel
-import com.numina.ui.messages.NewChatScreen
-import com.numina.ui.messages.NewChatViewModel
-import com.numina.data.repository.TokenManager
-import kotlinx.coroutines.launch
 
 @Composable
 fun NavGraph(
@@ -156,86 +148,164 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.Messages.route) {
-            val messagesViewModel: MessagesViewModel = hiltViewModel()
-            val messagesUiState by messagesViewModel.uiState.collectAsState()
+        composable(Screen.Groups.route) {
+            val groupsViewModel: GroupsViewModel = hiltViewModel()
+            val groupsUiState by groupsViewModel.uiState.collectAsState()
 
-            MessagesScreen(
-                uiState = messagesUiState,
-                onConversationClick = { conversationId, participantId, participantName, participantAvatar ->
-                    navController.navigate(
-                        Screen.Chat.createRoute(
-                            conversationId = conversationId,
-                            participantId = participantId,
-                            participantName = participantName,
-                            participantAvatar = participantAvatar
-                        )
-                    )
+            GroupsScreen(
+                uiState = groupsUiState,
+                onGroupClick = { groupId ->
+                    navController.navigate(Screen.GroupDetail.createRoute(groupId))
                 },
-                onNewChatClick = {
-                    navController.navigate(Screen.NewChat.route)
+                onCreateGroup = {
+                    navController.navigate(Screen.CreateGroup.route)
                 },
                 onRefresh = {
-                    messagesViewModel.loadConversations(refresh = true)
+                    groupsViewModel.loadGroups(refresh = true)
+                },
+                onFilterClick = {
+                    // Future feature: open filter dialog
+                },
+                onToggleMyGroups = { showMyGroups ->
+                    groupsViewModel.toggleShowMyGroups(showMyGroups)
                 }
             )
         }
 
         composable(
-            route = Screen.Chat.route,
-            arguments = listOf(
-                navArgument("conversationId") { type = NavType.StringType },
-                navArgument("participantId") { type = NavType.StringType },
-                navArgument("participantName") { type = NavType.StringType },
-                navArgument("participantAvatar") {
-                    type = NavType.StringType
-                    nullable = true
-                    defaultValue = null
-                }
-            )
+            route = Screen.GroupDetail.route,
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
         ) {
-            val chatViewModel: ChatViewModel = hiltViewModel()
-            val chatUiState by chatViewModel.uiState.collectAsState()
-            val tokenManager: TokenManager = hiltViewModel()
+            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
+            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
 
-            ChatScreen(
-                uiState = chatUiState,
-                onSendMessage = chatViewModel::sendMessage,
-                onTyping = chatViewModel::onTyping,
+            GroupDetailScreen(
+                uiState = groupDetailUiState,
                 onBack = {
                     navController.popBackStack()
                 },
-                currentUserId = tokenManager.getUserId() ?: ""
+                onJoinGroup = {
+                    groupDetailViewModel.joinGroup()
+                },
+                onLeaveGroup = {
+                    groupDetailViewModel.leaveGroup()
+                },
+                onActivityClick = { activityId ->
+                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
+                    navController.navigate(Screen.GroupActivity.createRoute(groupId, activityId))
+                },
+                onCreateActivity = {
+                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
+                    navController.navigate(Screen.CreateActivity.createRoute(groupId))
+                },
+                onViewMembers = {
+                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
+                    navController.navigate(Screen.GroupMembers.createRoute(groupId))
+                },
+                onRsvp = { activityId, status ->
+                    groupDetailViewModel.rsvpToActivity(activityId, status)
+                },
+                onRetry = {
+                    groupDetailViewModel.loadGroupDetails()
+                }
             )
         }
 
-        composable(Screen.NewChat.route) {
-            val newChatViewModel: NewChatViewModel = hiltViewModel()
-            val newChatUiState by newChatViewModel.uiState.collectAsState()
-            val scope = rememberCoroutineScope()
+        composable(Screen.CreateGroup.route) {
+            val createGroupViewModel: CreateGroupViewModel = hiltViewModel()
+            val createGroupUiState by createGroupViewModel.uiState.collectAsState()
 
-            NewChatScreen(
-                users = newChatUiState.users,
-                isLoading = newChatUiState.isLoading,
-                onUserSelect = { user ->
-                    scope.launch {
-                        val conversationId = newChatViewModel.createConversation(user)
-                        navController.navigate(
-                            Screen.Chat.createRoute(
-                                conversationId = conversationId,
-                                participantId = user.id,
-                                participantName = user.name,
-                                participantAvatar = user.profilePicture
-                            )
-                        ) {
-                            popUpTo(Screen.Messages.route)
-                        }
-                    }
+            CreateGroupScreen(
+                uiState = createGroupUiState,
+                onUpdateName = createGroupViewModel::updateName,
+                onUpdateDescription = createGroupViewModel::updateDescription,
+                onUpdateCategory = createGroupViewModel::updateCategory,
+                onUpdatePrivacy = createGroupViewModel::updatePrivacy,
+                onUpdateCity = createGroupViewModel::updateCity,
+                onUpdateState = createGroupViewModel::updateState,
+                onUpdateCountry = createGroupViewModel::updateCountry,
+                onUpdateMaxMembers = createGroupViewModel::updateMaxMembers,
+                onUpdatePhotoUrl = createGroupViewModel::updatePhotoUrl,
+                onNext = createGroupViewModel::nextStep,
+                onBack = createGroupViewModel::previousStep,
+                onCreate = createGroupViewModel::createGroup,
+                onNavigateBack = {
+                    navController.popBackStack()
                 },
+                onNavigateToGroup = { groupId ->
+                    navController.navigate(Screen.GroupDetail.createRoute(groupId)) {
+                        popUpTo(Screen.Groups.route)
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.GroupMembers.route,
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) {
+            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
+            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
+
+            GroupMembersScreen(
+                members = groupDetailUiState.members,
+                isLoading = groupDetailUiState.isLoading,
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.GroupActivity.route,
+            arguments = listOf(
+                navArgument("groupId") { type = NavType.StringType },
+                navArgument("activityId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
+            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
+            val activityId = backStackEntry.arguments?.getString("activityId") ?: ""
+            val activity = groupDetailUiState.activities.find { it.id == activityId }
+
+            activity?.let {
+                GroupActivityScreen(
+                    activity = it,
+                    isMember = groupDetailUiState.group?.isMember ?: false,
+                    onBack = {
+                        navController.popBackStack()
+                    },
+                    onRsvp = { status ->
+                        groupDetailViewModel.rsvpToActivity(activityId, status)
+                    }
+                )
+            }
+        }
+
+        composable(
+            route = Screen.CreateActivity.route,
+            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
+        ) {
+            val createActivityViewModel: CreateActivityViewModel = hiltViewModel()
+            val createActivityUiState by createActivityViewModel.uiState.collectAsState()
+
+            CreateActivityScreen(
+                uiState = createActivityUiState,
+                onUpdateTitle = createActivityViewModel::updateTitle,
+                onUpdateDescription = createActivityViewModel::updateDescription,
+                onUpdateDateTime = createActivityViewModel::updateDateTime,
+                onUpdateLocation = createActivityViewModel::updateLocation,
+                onUpdateFitnessClassId = createActivityViewModel::updateFitnessClassId,
+                onCreate = createActivityViewModel::createActivity,
                 onBack = {
                     navController.popBackStack()
                 },
-                onSearch = newChatViewModel::searchUsers
+                onNavigateToActivity = { activityId ->
+                    val groupId = it.arguments?.getString("groupId") ?: return@CreateActivityScreen
+                    navController.navigate(Screen.GroupActivity.createRoute(groupId, activityId)) {
+                        popUpTo(Screen.GroupDetail.createRoute(groupId))
+                    }
+                }
             )
         }
     }
