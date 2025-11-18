@@ -24,7 +24,7 @@ import com.numina.ui.notifications.NotificationsViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
 import com.numina.ui.reviews.*
-import com.numina.ui.bookings.*
+import com.numina.ui.social.*
 
 @Composable
 fun NavGraph(
@@ -226,49 +226,6 @@ fun NavGraph(
                     navController.navigate(Screen.WriteReview.createRoute(classId))
                 }
             )
-        }
-
-        // Bookings screens
-        composable(Screen.Bookings.route) {
-            BookingsScreen(
-                onBookingClick = { bookingId ->
-                    navController.navigate(Screen.BookingDetail.createRoute(bookingId))
-                },
-                onNavigateToClasses = {
-                    navController.navigate(Screen.Classes.route)
-                }
-            )
-        }
-
-        composable(
-            route = Screen.BookingDetail.route,
-            arguments = listOf(navArgument("bookingId") { type = NavType.StringType })
-        ) {
-            BookingDetailScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(Screen.Calendar.route) {
-            CalendarScreen(
-                onBookingClick = { bookingId ->
-                    navController.navigate(Screen.BookingDetail.createRoute(bookingId))
-                }
-            )
-        }
-
-        composable(Screen.ReminderPreferences.route) {
-            ReminderPreferencesScreen(
-                onNavigateBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(Screen.AttendanceStats.route) {
-            AttendanceStatsScreen()
         }
 
         // Social screens
