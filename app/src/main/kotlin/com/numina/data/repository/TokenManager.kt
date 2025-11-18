@@ -20,6 +20,7 @@ class TokenManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     private val tokenKey = stringPreferencesKey("jwt_token")
+    private val userIdKey = stringPreferencesKey("user_id")
 
     suspend fun saveToken(token: String) {
         context.dataStore.edit { preferences ->
@@ -33,9 +34,22 @@ class TokenManager @Inject constructor(
         }.first()
     }
 
+    suspend fun saveUserId(userId: String) {
+        context.dataStore.edit { preferences ->
+            preferences[userIdKey] = userId
+        }
+    }
+
+    fun getUserId(): String? = runBlocking {
+        context.dataStore.data.map { preferences ->
+            preferences[userIdKey]
+        }.first()
+    }
+
     suspend fun clearToken() {
         context.dataStore.edit { preferences ->
             preferences.remove(tokenKey)
+            preferences.remove(userIdKey)
         }
     }
 }

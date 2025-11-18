@@ -5,6 +5,8 @@ import androidx.room.Room
 import com.numina.data.db.AppDatabase
 import com.numina.data.db.FitnessClassDao
 import com.numina.data.db.UserDao
+import com.numina.data.db.MessageDao
+import com.numina.data.db.ConversationDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,5 +40,17 @@ object DatabaseModule {
     @Singleton
     fun provideFitnessClassDao(database: AppDatabase): FitnessClassDao {
         return database.fitnessClassDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessageDao(database: AppDatabase): MessageDao {
+        return database.messageDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideConversationDao(database: AppDatabase): ConversationDao {
+        return database.conversationDao()
     }
 }

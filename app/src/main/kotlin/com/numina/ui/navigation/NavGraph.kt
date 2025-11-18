@@ -3,6 +3,7 @@ package com.numina.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -19,6 +20,14 @@ import com.numina.ui.classes.ClassesScreen
 import com.numina.ui.classes.ClassesViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
+import com.numina.ui.messages.MessagesScreen
+import com.numina.ui.messages.MessagesViewModel
+import com.numina.ui.messages.ChatScreen
+import com.numina.ui.messages.ChatViewModel
+import com.numina.ui.messages.NewChatScreen
+import com.numina.ui.messages.NewChatViewModel
+import com.numina.data.repository.TokenManager
+import kotlinx.coroutines.launch
 
 @Composable
 fun NavGraph(
@@ -144,6 +153,89 @@ fun NavGraph(
                 onRetry = {
                     classDetailsViewModel.loadClassDetails()
                 }
+            )
+        }
+
+        composable(Screen.Messages.route) {
+            val messagesViewModel: MessagesViewModel = hiltViewModel()
+            val messagesUiState by messagesViewModel.uiState.collectAsState()
+
+            MessagesScreen(
+                uiState = messagesUiState,
+                onConversationClick = { conversationId, participantId, participantName, participantAvatar ->
+                    navController.navigate(
+                        Screen.Chat.createRoute(
+                            conversationId = conversationId,
+                            participantId = participantId,
+                            participantName = participantName,
+                            participantAvatar = participantAvatar
+                        )
+                    )
+                },
+                onNewChatClick = {
+                    navController.navigate(Screen.NewChat.route)
+                },
+                onRefresh = {
+                    messagesViewModel.loadConversations(refresh = true)
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(
+                navArgument("conversationId") { type = NavType.StringType },
+                navArgument("participantId") { type = NavType.StringType },
+                navArgument("participantName") { type = NavType.StringType },
+                navArgument("participantAvatar") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
+            val chatViewModel: ChatViewModel = hiltViewModel()
+            val chatUiState by chatViewModel.uiState.collectAsState()
+            val tokenManager: TokenManager = hiltViewModel()
+
+            ChatScreen(
+                uiState = chatUiState,
+                onSendMessage = chatViewModel::sendMessage,
+                onTyping = chatViewModel::onTyping,
+                onBack = {
+                    navController.popBackStack()
+                },
+                currentUserId = tokenManager.getUserId() ?: ""
+            )
+        }
+
+        composable(Screen.NewChat.route) {
+            val newChatViewModel: NewChatViewModel = hiltViewModel()
+            val newChatUiState by newChatViewModel.uiState.collectAsState()
+            val scope = rememberCoroutineScope()
+
+            NewChatScreen(
+                users = newChatUiState.users,
+                isLoading = newChatUiState.isLoading,
+                onUserSelect = { user ->
+                    scope.launch {
+                        val conversationId = newChatViewModel.createConversation(user)
+                        navController.navigate(
+                            Screen.Chat.createRoute(
+                                conversationId = conversationId,
+                                participantId = user.id,
+                                participantName = user.name,
+                                participantAvatar = user.profilePicture
+                            )
+                        ) {
+                            popUpTo(Screen.Messages.route)
+                        }
+                    }
+                },
+                onBack = {
+                    navController.popBackStack()
+                },
+                onSearch = newChatViewModel::searchUsers
             )
         }
     }

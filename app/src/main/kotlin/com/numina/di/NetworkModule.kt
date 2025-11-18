@@ -6,6 +6,7 @@ import com.numina.BuildConfig
 import com.numina.data.api.AuthApi
 import com.numina.data.api.ClassesApi
 import com.numina.data.api.UserApi
+import com.numina.data.api.MessagingApi
 import com.numina.data.repository.TokenManager
 import dagger.Module
 import dagger.Provides
@@ -96,5 +97,11 @@ object NetworkModule {
     @Singleton
     fun provideClassesApi(retrofit: Retrofit): ClassesApi {
         return retrofit.create(ClassesApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideMessagingApi(retrofit: Retrofit): MessagingApi {
+        return retrofit.create(MessagingApi::class.java)
     }
 }

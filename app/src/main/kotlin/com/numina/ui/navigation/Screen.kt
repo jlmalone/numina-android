@@ -9,4 +9,15 @@ sealed class Screen(val route: String) {
     object ClassDetails : Screen("class_details/{classId}") {
         fun createRoute(classId: String) = "class_details/$classId"
     }
+    object Messages : Screen("messages")
+    object Chat : Screen("chat/{conversationId}/{participantId}/{participantName}?participantAvatar={participantAvatar}") {
+        fun createRoute(
+            conversationId: String,
+            participantId: String,
+            participantName: String,
+            participantAvatar: String? = null
+        ) = "chat/$conversationId/$participantId/$participantName" +
+                if (participantAvatar != null) "?participantAvatar=$participantAvatar" else ""
+    }
+    object NewChat : Screen("new_chat")
 }
