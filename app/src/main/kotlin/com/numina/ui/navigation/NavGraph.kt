@@ -17,6 +17,10 @@ import com.numina.ui.classes.ClassDetailsScreen
 import com.numina.ui.classes.ClassDetailsViewModel
 import com.numina.ui.classes.ClassesScreen
 import com.numina.ui.classes.ClassesViewModel
+import com.numina.ui.notifications.NotificationPreferencesScreen
+import com.numina.ui.notifications.NotificationPreferencesViewModel
+import com.numina.ui.notifications.NotificationsScreen
+import com.numina.ui.notifications.NotificationsViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
 
@@ -143,6 +147,48 @@ fun NavGraph(
                 },
                 onRetry = {
                     classDetailsViewModel.loadClassDetails()
+                }
+            )
+        }
+
+        composable(Screen.Notifications.route) {
+            val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+            val notificationsUiState by notificationsViewModel.uiState.collectAsState()
+
+            NotificationsScreen(
+                uiState = notificationsUiState,
+                onNotificationClick = { notificationId ->
+                    notificationsViewModel.markAsRead(notificationId)
+                    // Future: navigate based on notification type
+                },
+                onRefresh = {
+                    notificationsViewModel.loadNotifications(refresh = true)
+                },
+                onSettingsClick = {
+                    navController.navigate(Screen.NotificationPreferences.route)
+                },
+                onMarkAllRead = {
+                    notificationsViewModel.markAllAsRead()
+                }
+            )
+        }
+
+        composable(Screen.NotificationPreferences.route) {
+            val preferencesViewModel: NotificationPreferencesViewModel = hiltViewModel()
+            val preferencesUiState by preferencesViewModel.uiState.collectAsState()
+
+            NotificationPreferencesScreen(
+                uiState = preferencesUiState,
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onToggleMessages = preferencesViewModel::updateMessagesEnabled,
+                onToggleMatches = preferencesViewModel::updateMatchesEnabled,
+                onToggleGroups = preferencesViewModel::updateGroupsEnabled,
+                onToggleReminders = preferencesViewModel::updateRemindersEnabled,
+                onToggleEmailFallback = preferencesViewModel::updateEmailFallbackEnabled,
+                onSave = {
+                    preferencesViewModel.savePreferences()
                 }
             )
         }
