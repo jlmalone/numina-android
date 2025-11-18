@@ -23,7 +23,7 @@ import com.numina.ui.notifications.NotificationsScreen
 import com.numina.ui.notifications.NotificationsViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
-import com.numina.ui.social.*
+import com.numina.ui.reviews.*
 
 @Composable
 fun NavGraph(
@@ -148,6 +148,81 @@ fun NavGraph(
                 },
                 onRetry = {
                     classDetailsViewModel.loadClassDetails()
+                },
+                onViewReviews = { classId ->
+                    navController.navigate(Screen.ReviewsList.createRoute(classId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ReviewsList.route,
+            arguments = listOf(navArgument("classId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val classId = backStackEntry.arguments?.getString("classId") ?: return@composable
+
+            ReviewsListScreen(
+                classId = classId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onWriteReview = { classId ->
+                    navController.navigate(Screen.WriteReview.createRoute(classId))
+                }
+            )
+        }
+
+        composable(
+            route = Screen.WriteReview.route,
+            arguments = listOf(navArgument("classId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val classId = backStackEntry.arguments?.getString("classId") ?: return@composable
+
+            WriteReviewScreen(
+                classId = classId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.EditReview.route,
+            arguments = listOf(navArgument("reviewId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val reviewId = backStackEntry.arguments?.getString("reviewId") ?: return@composable
+
+            // Note: In a real app, you'd fetch the review by ID and pass it to the screen
+            WriteReviewScreen(
+                classId = null,
+                existingReview = null, // This would be fetched
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.MyReviews.route) {
+            MyReviewsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onEditReview = { reviewId ->
+                    navController.navigate(Screen.EditReview.createRoute(reviewId))
+                },
+                onClassClick = { classId ->
+                    navController.navigate(Screen.ClassDetails.createRoute(classId))
+                }
+            )
+        }
+
+        composable(Screen.PendingReviews.route) {
+            PendingReviewsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onWriteReview = { classId ->
+                    navController.navigate(Screen.WriteReview.createRoute(classId))
                 }
             )
         }

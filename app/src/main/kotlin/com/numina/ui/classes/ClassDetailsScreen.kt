@@ -23,7 +23,8 @@ import com.numina.ui.components.NuminaButton
 fun ClassDetailsScreen(
     uiState: ClassDetailsUiState,
     onBack: () -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onViewReviews: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -57,6 +58,7 @@ fun ClassDetailsScreen(
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(uiState.fitnessClass.bookingUrl))
                         context.startActivity(intent)
                     },
+                    onViewReviews = { onViewReviews(uiState.fitnessClass.id) },
                     modifier = Modifier.padding(padding)
                 )
             }
@@ -68,6 +70,7 @@ fun ClassDetailsScreen(
 fun ClassDetailsContent(
     fitnessClass: FitnessClass,
     onBookClass: () -> Unit,
+    onViewReviews: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -188,6 +191,17 @@ fun ClassDetailsContent(
             text = "Book on ${fitnessClass.provider}",
             onClick = onBookClass
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(
+            onClick = onViewReviews,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+        ) {
+            Text("View Reviews")
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
