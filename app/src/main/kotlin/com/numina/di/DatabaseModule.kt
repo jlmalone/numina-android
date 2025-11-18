@@ -46,4 +46,16 @@ object DatabaseModule {
     fun provideReviewDao(database: AppDatabase): ReviewDao {
         return database.reviewDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideBookingDao(database: AppDatabase): com.numina.data.db.BookingDao {
+        return database.bookingDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReminderPreferencesDao(database: AppDatabase): com.numina.data.db.ReminderPreferencesDao {
+        return database.reminderPreferencesDao()
+    }
 }

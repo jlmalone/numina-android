@@ -5,6 +5,7 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.numina.data.models.Availability
 import com.numina.data.models.ClassLocation
+import com.numina.data.models.FitnessClass
 import com.numina.data.models.GroupLocation
 import com.numina.data.models.Location
 import com.numina.data.models.RsvpCounts
@@ -90,5 +91,16 @@ class Converters {
     @TypeConverter
     fun toRsvpCounts(counts: RsvpCounts?): String? {
         return gson.toJson(counts)
+    }
+
+    @TypeConverter
+    fun fromFitnessClass(value: String?): FitnessClass? {
+        if (value == null) return null
+        return gson.fromJson(value, FitnessClass::class.java)
+    }
+
+    @TypeConverter
+    fun toFitnessClass(fitnessClass: FitnessClass?): String? {
+        return gson.toJson(fitnessClass)
     }
 }

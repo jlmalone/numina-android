@@ -20,4 +20,11 @@ sealed class Screen(val route: String) {
     }
     object MyReviews : Screen("my_reviews")
     object PendingReviews : Screen("pending_reviews")
+    object Bookings : Screen("bookings")
+    object BookingDetail : Screen("booking_detail/{bookingId}") {
+        fun createRoute(bookingId: String) = "booking_detail/$bookingId"
+    }
+    object Calendar : Screen("calendar")
+    object ReminderPreferences : Screen("reminder_preferences")
+    object AttendanceStats : Screen("attendance_stats")
 }

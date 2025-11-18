@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.numina.BuildConfig
 import com.numina.data.api.AuthApi
+import com.numina.data.api.BookingsApi
 import com.numina.data.api.ClassesApi
 import com.numina.data.api.ReviewsApi
 import com.numina.data.api.UserApi
@@ -103,5 +104,11 @@ object NetworkModule {
     @Singleton
     fun provideReviewsApi(retrofit: Retrofit): ReviewsApi {
         return retrofit.create(ReviewsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideBookingsApi(retrofit: Retrofit): BookingsApi {
+        return retrofit.create(BookingsApi::class.java)
     }
 }
