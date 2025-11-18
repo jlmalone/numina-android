@@ -1,23 +1,29 @@
 package com.numina.ui.notifications
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.numina.data.models.Notification
-import com.numina.ui.components.EmptyState
-import com.numina.ui.components.ErrorScreen
-import com.numina.ui.components.LoadingScreen
+import com.numina.ui.components.*
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +34,16 @@ fun NotificationsScreen(
     onSettingsClick: () -> Unit,
     onMarkAllRead: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    LaunchedEffect(uiState.isLoading) {
+        if (!uiState.isLoading) {
+            isRefreshing = false
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -44,7 +60,10 @@ fun NotificationsScreen(
                 },
                 actions = {
                     if (uiState.unreadCount > 0) {
-                        IconButton(onClick = onMarkAllRead) {
+                        IconButton(onClick = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onMarkAllRead()
+                        }) {
                             Icon(
                                 Icons.Default.CheckCircle,
                                 contentDescription = "Mark all as read"
@@ -58,38 +77,110 @@ fun NotificationsScreen(
             )
         }
     ) { padding ->
-        when {
-            uiState.isLoading && uiState.notifications.isEmpty() -> {
-                LoadingScreen(modifier = Modifier.padding(padding))
-            }
-            uiState.error != null && uiState.notifications.isEmpty() -> {
-                ErrorScreen(
-                    message = uiState.error,
-                    onRetry = onRefresh,
-                    modifier = Modifier.padding(padding)
-                )
-            }
-            uiState.notifications.isEmpty() -> {
-                EmptyState(
-                    message = "No notifications yet",
-                    modifier = Modifier.padding(padding)
-                )
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.padding(padding),
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(uiState.notifications) { notification ->
-                        NotificationItem(
-                            notification = notification,
-                            onClick = { onNotificationClick(notification.id) }
-                        )
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .nestedScroll(pullToRefreshState.nestedScrollConnection)
+        ) {
+            when {
+                uiState.isLoading && uiState.notifications.isEmpty() -> {
+                    // Show skeleton loading
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(6) {
+                            SkeletonNotificationItem()
+                        }
+                    }
+                }
+                uiState.error != null && uiState.notifications.isEmpty() -> {
+                    ErrorScreen(
+                        message = uiState.error,
+                        onRetry = onRefresh
+                    )
+                }
+                uiState.notifications.isEmpty() -> {
+                    EmptyStateView(
+                        message = "No notifications yet",
+                        icon = Icons.Default.NotificationsNone,
+                        actionLabel = "Refresh",
+                        onAction = onRefresh
+                    )
+                }
+                else -> {
+                    LazyColumn(
+                        contentPadding = PaddingValues(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        itemsIndexed(
+                            items = uiState.notifications,
+                            key = { _, item -> item.id }
+                        ) { index, notification ->
+                            AnimatedNotificationItem(
+                                notification = notification,
+                                index = index,
+                                onClick = {
+                                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    onNotificationClick(notification.id)
+                                }
+                            )
+                        }
                     }
                 }
             }
+
+            // Pull to refresh
+            if (pullToRefreshState.isRefreshing) {
+                LaunchedEffect(true) {
+                    isRefreshing = true
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onRefresh()
+                }
+            }
+
+            LaunchedEffect(isRefreshing) {
+                if (isRefreshing) {
+                    pullToRefreshState.startRefresh()
+                } else {
+                    pullToRefreshState.endRefresh()
+                }
+            }
+
+            PullToRefreshContainer(
+                state = pullToRefreshState,
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
         }
+    }
+}
+
+/**
+ * Notification item with fade-in animation
+ */
+@Composable
+fun AnimatedNotificationItem(
+    notification: Notification,
+    index: Int,
+    onClick: () -> Unit
+) {
+    var visible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(index * 50L)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(300)) +
+                expandVertically(animationSpec = tween(300))
+    ) {
+        NotificationItem(
+            notification = notification,
+            onClick = onClick
+        )
     }
 }
 

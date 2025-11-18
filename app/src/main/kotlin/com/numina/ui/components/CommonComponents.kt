@@ -1,10 +1,19 @@
 package com.numina.ui.components
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
@@ -18,6 +27,10 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Legacy ErrorScreen - now uses enhanced ErrorView
+ * Kept for backward compatibility
+ */
 @Composable
 fun ErrorScreen(
     message: String,
@@ -28,23 +41,18 @@ fun ErrorScreen(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-                textAlign = TextAlign.Center
-            )
-            Button(onClick = onRetry) {
-                Text("Retry")
-            }
-        }
+        ErrorView(
+            message = message,
+            onRetry = onRetry,
+            errorType = getErrorType(message)
+        )
     }
 }
 
+/**
+ * Legacy EmptyState - now uses enhanced EmptyStateView
+ * Kept for backward compatibility
+ */
 @Composable
 fun EmptyState(
     message: String,
@@ -54,15 +62,13 @@ fun EmptyState(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center
-        )
+        EmptyStateView(message = message)
     }
 }
 
+/**
+ * Enhanced text field with validation support and password visibility toggle
+ */
 @Composable
 fun NuminaTextField(
     value: String,
@@ -72,23 +78,99 @@ fun NuminaTextField(
     isPassword: Boolean = false,
     singleLine: Boolean = true,
     maxLines: Int = 1,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    errorMessage: String? = null,
+    supportingText: String? = null,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    maxCharacters: Int? = null
 ) {
-    OutlinedTextField(
-        value = value,
-        onValueChange = onValueChange,
-        label = { Text(label) },
-        modifier = modifier.fillMaxWidth(),
-        singleLine = singleLine,
-        maxLines = maxLines,
-        enabled = enabled,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    Column(modifier = modifier) {
+        OutlinedTextField(
+            value = value,
+            onValueChange = { newValue ->
+                if (maxCharacters == null || newValue.length <= maxCharacters) {
+                    onValueChange(newValue)
+                }
+            },
+            label = { Text(label) },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = singleLine,
+            maxLines = maxLines,
+            enabled = enabled,
+            isError = isError,
+            visualTransformation = if (isPassword && !passwordVisible)
+                PasswordVisualTransformation()
+            else
+                VisualTransformation.None,
+            trailingIcon = {
+                when {
+                    isPassword -> {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible)
+                                    Icons.Default.VisibilityOff
+                                else
+                                    Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible)
+                                    "Hide password"
+                                else
+                                    "Show password"
+                            )
+                        }
+                    }
+                    isError -> {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = "Error",
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            supportingText = {
+                when {
+                    isError && errorMessage != null -> {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                    supportingText != null -> {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(supportingText)
+                            if (maxCharacters != null) {
+                                Text("${value.length}/$maxCharacters")
+                            }
+                        }
+                    }
+                    maxCharacters != null -> {
+                        Text(
+                            "${value.length}/$maxCharacters",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.End
+                        )
+                    }
+                }
+            },
+            keyboardOptions = keyboardOptions,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                errorBorderColor = MaterialTheme.colorScheme.error
+            )
         )
-    )
+    }
 }
 
+/**
+ * Enhanced button with haptic feedback and loading state
+ */
 @Composable
 fun NuminaButton(
     text: String,
@@ -97,8 +179,13 @@ fun NuminaButton(
     enabled: Boolean = true,
     loading: Boolean = false
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Button(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),
@@ -121,6 +208,9 @@ fun NuminaButton(
     }
 }
 
+/**
+ * Enhanced outlined button with haptic feedback
+ */
 @Composable
 fun NuminaOutlinedButton(
     text: String,
@@ -128,8 +218,13 @@ fun NuminaOutlinedButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
+    val haptic = LocalHapticFeedback.current
+
     OutlinedButton(
-        onClick = onClick,
+        onClick = {
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            onClick()
+        },
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp),

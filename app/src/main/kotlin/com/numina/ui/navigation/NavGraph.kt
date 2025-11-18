@@ -24,6 +24,7 @@ import com.numina.ui.notifications.NotificationsViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
 import com.numina.ui.reviews.*
+import com.numina.ui.social.*
 
 @Composable
 fun NavGraph(
