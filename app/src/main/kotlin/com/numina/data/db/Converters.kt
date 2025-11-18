@@ -5,7 +5,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.numina.data.models.Availability
 import com.numina.data.models.ClassLocation
+import com.numina.data.models.GroupLocation
 import com.numina.data.models.Location
+import com.numina.data.models.RsvpCounts
 import com.numina.data.models.Trainer
 
 class Converters {
@@ -66,5 +68,27 @@ class Converters {
     @TypeConverter
     fun toTrainer(trainer: Trainer?): String? {
         return gson.toJson(trainer)
+    }
+
+    @TypeConverter
+    fun fromGroupLocation(value: String?): GroupLocation? {
+        if (value == null) return null
+        return gson.fromJson(value, GroupLocation::class.java)
+    }
+
+    @TypeConverter
+    fun toGroupLocation(location: GroupLocation?): String? {
+        return gson.toJson(location)
+    }
+
+    @TypeConverter
+    fun fromRsvpCounts(value: String?): RsvpCounts? {
+        if (value == null) return null
+        return gson.fromJson(value, RsvpCounts::class.java)
+    }
+
+    @TypeConverter
+    fun toRsvpCounts(counts: RsvpCounts?): String? {
+        return gson.toJson(counts)
     }
 }
