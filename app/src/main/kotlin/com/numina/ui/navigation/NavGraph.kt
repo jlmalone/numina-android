@@ -19,6 +19,7 @@ import com.numina.ui.classes.ClassesScreen
 import com.numina.ui.classes.ClassesViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
+import com.numina.ui.social.*
 
 @Composable
 fun NavGraph(
@@ -143,6 +144,146 @@ fun NavGraph(
                 },
                 onRetry = {
                     classDetailsViewModel.loadClassDetails()
+                }
+            )
+        }
+
+        // Social screens
+        composable(Screen.Feed.route) {
+            val feedViewModel: FeedViewModel = hiltViewModel()
+            val feedUiState by feedViewModel.uiState.collectAsState()
+
+            FeedScreen(
+                uiState = feedUiState,
+                onRefresh = {
+                    feedViewModel.loadFeed(refresh = true)
+                },
+                onLoadMore = {
+                    feedViewModel.loadMoreActivities()
+                },
+                onLikeClick = { activityId ->
+                    feedViewModel.likeActivity(activityId)
+                },
+                onUnlikeClick = { activityId ->
+                    feedViewModel.unlikeActivity(activityId)
+                },
+                onCommentClick = { activityId ->
+                    navController.navigate(Screen.ActivityDetail.createRoute(activityId))
+                },
+                onUserClick = { userId ->
+                    navController.navigate(Screen.UserProfile.createRoute(userId))
+                }
+            )
+        }
+
+        composable(Screen.DiscoverUsers.route) {
+            val discoverViewModel: DiscoverViewModel = hiltViewModel()
+            val discoverUiState by discoverViewModel.uiState.collectAsState()
+
+            DiscoverUsersScreen(
+                uiState = discoverUiState,
+                onUserClick = { userId ->
+                    navController.navigate(Screen.UserProfile.createRoute(userId))
+                },
+                onFollowClick = { userId, _ ->
+                    // Handle follow/unfollow through repository
+                },
+                onSearchQueryChange = { query ->
+                    discoverViewModel.updateSearchQuery(query)
+                },
+                onApplyFilters = {
+                    discoverViewModel.applyFilters()
+                },
+                onLoadMore = {
+                    discoverViewModel.loadMoreUsers()
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.UserProfile.route,
+            arguments = listOf(navArgument("userId") { type = NavType.StringType })
+        ) {
+            val userProfileViewModel: UserProfileViewModel = hiltViewModel()
+            val userProfileUiState by userProfileViewModel.uiState.collectAsState()
+
+            UserProfileScreen(
+                uiState = userProfileUiState,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onFollowToggle = {
+                    userProfileViewModel.toggleFollow()
+                },
+                onActivityClick = { activityId ->
+                    navController.navigate(Screen.ActivityDetail.createRoute(activityId))
+                },
+                onFollowersClick = {
+                    navController.navigate(Screen.Following.route)
+                },
+                onFollowingClick = {
+                    navController.navigate(Screen.Following.route)
+                },
+                onLoadMoreActivities = {
+                    userProfileViewModel.loadMoreActivities()
+                }
+            )
+        }
+
+        composable(Screen.Following.route) {
+            val followingViewModel: FollowingViewModel = hiltViewModel()
+            val followingUiState by followingViewModel.uiState.collectAsState()
+
+            FollowingScreen(
+                uiState = followingUiState,
+                onUserClick = { userId ->
+                    navController.navigate(Screen.UserProfile.createRoute(userId))
+                },
+                onFollowClick = { userId, _ ->
+                    followingViewModel.followUser(userId)
+                },
+                onUnfollowClick = { userId ->
+                    followingViewModel.unfollowUser(userId)
+                },
+                onTabChange = { tab ->
+                    followingViewModel.selectTab(tab)
+                },
+                onBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ActivityDetail.route,
+            arguments = listOf(navArgument("activityId") { type = NavType.StringType })
+        ) {
+            val activityDetailViewModel: ActivityDetailViewModel = hiltViewModel()
+            val activityDetailUiState by activityDetailViewModel.uiState.collectAsState()
+
+            ActivityDetailScreen(
+                uiState = activityDetailUiState,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onLikeToggle = {
+                    val activity = activityDetailUiState.activity
+                    if (activity != null) {
+                        if (activity.isLiked) {
+                            activityDetailViewModel.unlikeActivity()
+                        } else {
+                            activityDetailViewModel.likeActivity()
+                        }
+                    }
+                },
+                onCommentTextChange = { text ->
+                    activityDetailViewModel.updateCommentText(text)
+                },
+                onPostComment = {
+                    activityDetailViewModel.postComment()
                 }
             )
         }
