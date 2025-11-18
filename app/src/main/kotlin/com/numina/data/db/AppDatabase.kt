@@ -8,8 +8,8 @@ import androidx.room.TypeConverters
     entities = [
         UserEntity::class,
         FitnessClassEntity::class,
-        GroupEntity::class,
-        GroupActivityEntity::class
+        NotificationEntity::class,
+        NotificationPreferencesEntity::class
     ],
     version = 2,
     exportSchema = false
@@ -18,8 +18,8 @@ import androidx.room.TypeConverters
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun fitnessClassDao(): FitnessClassDao
-    abstract fun groupDao(): GroupDao
-    abstract fun groupActivityDao(): GroupActivityDao
+    abstract fun notificationDao(): NotificationDao
+    abstract fun notificationPreferencesDao(): NotificationPreferencesDao
 
     companion object {
         const val DATABASE_NAME = "numina_db"

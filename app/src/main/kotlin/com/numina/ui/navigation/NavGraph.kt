@@ -17,7 +17,10 @@ import com.numina.ui.classes.ClassDetailsScreen
 import com.numina.ui.classes.ClassDetailsViewModel
 import com.numina.ui.classes.ClassesScreen
 import com.numina.ui.classes.ClassesViewModel
-import com.numina.ui.groups.*
+import com.numina.ui.notifications.NotificationPreferencesScreen
+import com.numina.ui.notifications.NotificationPreferencesViewModel
+import com.numina.ui.notifications.NotificationsScreen
+import com.numina.ui.notifications.NotificationsViewModel
 import com.numina.ui.onboarding.OnboardingScreen
 import com.numina.ui.onboarding.OnboardingViewModel
 
@@ -148,163 +151,44 @@ fun NavGraph(
             )
         }
 
-        composable(Screen.Groups.route) {
-            val groupsViewModel: GroupsViewModel = hiltViewModel()
-            val groupsUiState by groupsViewModel.uiState.collectAsState()
+        composable(Screen.Notifications.route) {
+            val notificationsViewModel: NotificationsViewModel = hiltViewModel()
+            val notificationsUiState by notificationsViewModel.uiState.collectAsState()
 
-            GroupsScreen(
-                uiState = groupsUiState,
-                onGroupClick = { groupId ->
-                    navController.navigate(Screen.GroupDetail.createRoute(groupId))
-                },
-                onCreateGroup = {
-                    navController.navigate(Screen.CreateGroup.route)
+            NotificationsScreen(
+                uiState = notificationsUiState,
+                onNotificationClick = { notificationId ->
+                    notificationsViewModel.markAsRead(notificationId)
+                    // Future: navigate based on notification type
                 },
                 onRefresh = {
-                    groupsViewModel.loadGroups(refresh = true)
+                    notificationsViewModel.loadNotifications(refresh = true)
                 },
-                onFilterClick = {
-                    // Future feature: open filter dialog
+                onSettingsClick = {
+                    navController.navigate(Screen.NotificationPreferences.route)
                 },
-                onToggleMyGroups = { showMyGroups ->
-                    groupsViewModel.toggleShowMyGroups(showMyGroups)
+                onMarkAllRead = {
+                    notificationsViewModel.markAllAsRead()
                 }
             )
         }
 
-        composable(
-            route = Screen.GroupDetail.route,
-            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
-        ) {
-            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
-            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
+        composable(Screen.NotificationPreferences.route) {
+            val preferencesViewModel: NotificationPreferencesViewModel = hiltViewModel()
+            val preferencesUiState by preferencesViewModel.uiState.collectAsState()
 
-            GroupDetailScreen(
-                uiState = groupDetailUiState,
-                onBack = {
+            NotificationPreferencesScreen(
+                uiState = preferencesUiState,
+                onBackClick = {
                     navController.popBackStack()
                 },
-                onJoinGroup = {
-                    groupDetailViewModel.joinGroup()
-                },
-                onLeaveGroup = {
-                    groupDetailViewModel.leaveGroup()
-                },
-                onActivityClick = { activityId ->
-                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
-                    navController.navigate(Screen.GroupActivity.createRoute(groupId, activityId))
-                },
-                onCreateActivity = {
-                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
-                    navController.navigate(Screen.CreateActivity.createRoute(groupId))
-                },
-                onViewMembers = {
-                    val groupId = groupDetailUiState.group?.id ?: return@GroupDetailScreen
-                    navController.navigate(Screen.GroupMembers.createRoute(groupId))
-                },
-                onRsvp = { activityId, status ->
-                    groupDetailViewModel.rsvpToActivity(activityId, status)
-                },
-                onRetry = {
-                    groupDetailViewModel.loadGroupDetails()
-                }
-            )
-        }
-
-        composable(Screen.CreateGroup.route) {
-            val createGroupViewModel: CreateGroupViewModel = hiltViewModel()
-            val createGroupUiState by createGroupViewModel.uiState.collectAsState()
-
-            CreateGroupScreen(
-                uiState = createGroupUiState,
-                onUpdateName = createGroupViewModel::updateName,
-                onUpdateDescription = createGroupViewModel::updateDescription,
-                onUpdateCategory = createGroupViewModel::updateCategory,
-                onUpdatePrivacy = createGroupViewModel::updatePrivacy,
-                onUpdateCity = createGroupViewModel::updateCity,
-                onUpdateState = createGroupViewModel::updateState,
-                onUpdateCountry = createGroupViewModel::updateCountry,
-                onUpdateMaxMembers = createGroupViewModel::updateMaxMembers,
-                onUpdatePhotoUrl = createGroupViewModel::updatePhotoUrl,
-                onNext = createGroupViewModel::nextStep,
-                onBack = createGroupViewModel::previousStep,
-                onCreate = createGroupViewModel::createGroup,
-                onNavigateBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToGroup = { groupId ->
-                    navController.navigate(Screen.GroupDetail.createRoute(groupId)) {
-                        popUpTo(Screen.Groups.route)
-                    }
-                }
-            )
-        }
-
-        composable(
-            route = Screen.GroupMembers.route,
-            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
-        ) {
-            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
-            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
-
-            GroupMembersScreen(
-                members = groupDetailUiState.members,
-                isLoading = groupDetailUiState.isLoading,
-                onBack = {
-                    navController.popBackStack()
-                }
-            )
-        }
-
-        composable(
-            route = Screen.GroupActivity.route,
-            arguments = listOf(
-                navArgument("groupId") { type = NavType.StringType },
-                navArgument("activityId") { type = NavType.StringType }
-            )
-        ) { backStackEntry ->
-            val groupDetailViewModel: GroupDetailViewModel = hiltViewModel()
-            val groupDetailUiState by groupDetailViewModel.uiState.collectAsState()
-            val activityId = backStackEntry.arguments?.getString("activityId") ?: ""
-            val activity = groupDetailUiState.activities.find { it.id == activityId }
-
-            activity?.let {
-                GroupActivityScreen(
-                    activity = it,
-                    isMember = groupDetailUiState.group?.isMember ?: false,
-                    onBack = {
-                        navController.popBackStack()
-                    },
-                    onRsvp = { status ->
-                        groupDetailViewModel.rsvpToActivity(activityId, status)
-                    }
-                )
-            }
-        }
-
-        composable(
-            route = Screen.CreateActivity.route,
-            arguments = listOf(navArgument("groupId") { type = NavType.StringType })
-        ) {
-            val createActivityViewModel: CreateActivityViewModel = hiltViewModel()
-            val createActivityUiState by createActivityViewModel.uiState.collectAsState()
-
-            CreateActivityScreen(
-                uiState = createActivityUiState,
-                onUpdateTitle = createActivityViewModel::updateTitle,
-                onUpdateDescription = createActivityViewModel::updateDescription,
-                onUpdateDateTime = createActivityViewModel::updateDateTime,
-                onUpdateLocation = createActivityViewModel::updateLocation,
-                onUpdateFitnessClassId = createActivityViewModel::updateFitnessClassId,
-                onCreate = createActivityViewModel::createActivity,
-                onBack = {
-                    navController.popBackStack()
-                },
-                onNavigateToActivity = { activityId ->
-                    val groupId = it.arguments?.getString("groupId") ?: return@CreateActivityScreen
-                    navController.navigate(Screen.GroupActivity.createRoute(groupId, activityId)) {
-                        popUpTo(Screen.GroupDetail.createRoute(groupId))
-                    }
+                onToggleMessages = preferencesViewModel::updateMessagesEnabled,
+                onToggleMatches = preferencesViewModel::updateMatchesEnabled,
+                onToggleGroups = preferencesViewModel::updateGroupsEnabled,
+                onToggleReminders = preferencesViewModel::updateRemindersEnabled,
+                onToggleEmailFallback = preferencesViewModel::updateEmailFallbackEnabled,
+                onSave = {
+                    preferencesViewModel.savePreferences()
                 }
             )
         }

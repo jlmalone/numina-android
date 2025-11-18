@@ -4,8 +4,8 @@ import android.content.Context
 import androidx.room.Room
 import com.numina.data.db.AppDatabase
 import com.numina.data.db.FitnessClassDao
-import com.numina.data.db.GroupActivityDao
-import com.numina.data.db.GroupDao
+import com.numina.data.db.NotificationDao
+import com.numina.data.db.NotificationPreferencesDao
 import com.numina.data.db.UserDao
 import dagger.Module
 import dagger.Provides
@@ -44,13 +44,13 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideGroupDao(database: AppDatabase): GroupDao {
-        return database.groupDao()
+    fun provideNotificationDao(database: AppDatabase): NotificationDao {
+        return database.notificationDao()
     }
 
     @Provides
     @Singleton
-    fun provideGroupActivityDao(database: AppDatabase): GroupActivityDao {
-        return database.groupActivityDao()
+    fun provideNotificationPreferencesDao(database: AppDatabase): NotificationPreferencesDao {
+        return database.notificationPreferencesDao()
     }
 }

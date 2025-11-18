@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder
 import com.numina.BuildConfig
 import com.numina.data.api.AuthApi
 import com.numina.data.api.ClassesApi
-import com.numina.data.api.GroupsApi
+import com.numina.data.api.NotificationsApi
 import com.numina.data.api.UserApi
 import com.numina.data.repository.TokenManager
 import dagger.Module
@@ -101,7 +101,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGroupsApi(retrofit: Retrofit): GroupsApi {
-        return retrofit.create(GroupsApi::class.java)
+    fun provideNotificationsApi(retrofit: Retrofit): NotificationsApi {
+        return retrofit.create(NotificationsApi::class.java)
     }
 }
